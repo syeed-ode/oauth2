@@ -28,7 +28,7 @@ var authServer = {
 var clients = [
 	{
 		"client_id": "oauth-client-1",
-		"client_secret": "oauth-client-secret-1",
+		"client_secret": "i-wont-tell-your-secret-no-no-no-no-no-no-no",
 		"redirect_uris": ["http://localhost:9000/callback"],
 		"scope": "foo bar"
 	}
@@ -48,6 +48,10 @@ app.get('/', function(req, res) {
 
 app.get("/authorize", function(req, res){
 	
+	console.log("2) [AuthServer] Entered authorizationServer's authorize endpoint");
+	console.log('2) [AuthServer] Validating client information/username/password show approval page and select scopes');
+	console.log();
+
 	var client = getClient(req.query.client_id);
 	
 	if (!client) {
@@ -75,7 +79,8 @@ app.get("/authorize", function(req, res){
 		var reqid = randomstring.generate(8);
 		
 		requests[reqid] = req.query;
-		
+		console.log('3) [AuthServer] Request resouce owner to approve client\'s authorization');
+		console.log();
 		res.render('approve', {client: client, reqid: reqid, scope: rscope});
 		return;
 	}
@@ -84,6 +89,8 @@ app.get("/authorize", function(req, res){
 
 app.post('/approve', function(req, res) {
 
+	console.log("4) [AuthServer] Entered authorizationServer's approve endpoint");
+	
 	var reqid = req.body.reqid;
 	var query = requests[reqid];
 	delete requests[reqid];
@@ -123,6 +130,9 @@ app.post('/approve', function(req, res) {
 			urlParsed.query = urlParsed.query || {};
 			urlParsed.query.code = code;
 			urlParsed.query.state = query.state; 
+			console.log("4) [AuthServer] User has approved client credentials and scope");
+			console.log("4) [AuthServer] redirecting to ", url.format(urlParsed));
+			console.log();
 			res.redirect(url.format(urlParsed));
 			return;
 		} else {
@@ -148,6 +158,9 @@ app.post('/approve', function(req, res) {
 
 app.post("/token", function(req, res){
 	
+	console.log("6) [authServer] Entering authServer's token endpoint");
+	console.log();
+
 	var auth = req.headers['authorization'];
 	if (auth) {
 		// check the auth header
@@ -233,6 +246,6 @@ var server = app.listen(9001, 'localhost', function () {
   var host = server.address().address;
   var port = server.address().port;
 
-  console.log('OAuth Authorization Server is listening at http://%s:%s', host, port);
+  console.log('OAuth Authorization Server v1 is listening at http://%s:%s', host, port);
 });
  
