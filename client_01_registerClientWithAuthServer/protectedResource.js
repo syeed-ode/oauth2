@@ -18,11 +18,14 @@ app.use(cors());
 
 var resource = {
 	"name": "Protected Resource",
-	"description": "This data has been protected by OAuth 2.0"
+	"description": "This data has been protected by OAuth 2.0. It was drinking rum and RedBull"
 };
 
 var getAccessToken = function(req, res, next) {
 	// check the auth header first
+	console.log('8) [protectedResource] Entering protectedResource\'s resouce endpoint');
+	console.log('8) [protectedResource] Entering protectedResource\'s getAccessToken function');
+	console.log('8) [protectedResource] Currently have the following headers:', req.headers);
 	var auth = req.headers['authorization'];
 	var inToken = null;
 	if (auth && auth.toLowerCase().indexOf('bearer') == 0) {
@@ -34,12 +37,12 @@ var getAccessToken = function(req, res, next) {
 		inToken = req.query.access_token
 	}
 	
-	console.log('Incoming token: %s', inToken);
+	console.log('8) [protectedResource] Incoming token: %s', inToken);
 	nosql.one().make(function(builder) {
 	  builder.where('access_token', inToken);
 	  builder.callback(function(err, token) {
 	    if (token) {
-	      console.log("We found a matching token: %s", inToken);
+	      console.log("8) [protectedResource] We found a matching token: %s", inToken);
 	    } else {
 	      console.log('No matching token was found.');
 	    };
@@ -52,8 +55,8 @@ var getAccessToken = function(req, res, next) {
 
 app.options('/resource', cors());
 app.post("/resource", cors(), getAccessToken, function(req, res){
-
 	if (req.access_token) {
+		console.log("8) [protectedResource] this is the resource: ", resource);
 		res.json(resource);
 	} else {
 		res.status(401).end();

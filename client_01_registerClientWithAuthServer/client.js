@@ -42,8 +42,7 @@ app.get('/', function(req, res){
 app.get('/authorize', function(req, res) {
 
 	console.log("1) [client] Entered clients authorize endpoint");
-	console.log('1) [client] Using redirect: Sending the resource owner to the authorization server starting the process');
-	console.log();
+	console.log('1) [client] Using redirect: Sending the resource owner to the authorizationServer\'s authorize endpoint starting the process');
 
 	var authorizeUrl = buildUrl(authorizationServer.authorizationEndpoint, {
 		response_type: 'code',
@@ -51,15 +50,16 @@ app.get('/authorize', function(req, res) {
 		redirect_uri: client.redirect_urls[0]
 	});
 	
-	console.log("redirect", authorizeUrl);
+	console.log("1) [client] redirect", authorizeUrl);
+	console.log();
 	res.redirect(authorizeUrl);
 });
 
 app.get('/callback', function(req, res) {
-	console.log("5) [client] Entered clients callback endpoint (redirected from approval)");
-	console.log('5) [client] Read "code" parameter from authorizationServer redirect');
+	console.log("5) [client] Entered clients callback endpoint (redirected from authorizationServer's approval)");
 
 	let code = req.query.code;
+	console.log('5) [client] Read "code" parameter from authorizationServer redirect:', code);
 	
 	let form_data = qs.stringify({
 		grant_type: 'authorization_code',
@@ -76,7 +76,6 @@ app.get('/callback', function(req, res) {
 	};
 
 	console.log('5) [client] Issue token request to authorizationServer ');
-	console.log();
 	var tokenResponse = request('POST', authorizationServer.tokenEndpoint, {
 		body: form_data,
 		headers: headers
@@ -85,12 +84,42 @@ app.get('/callback', function(req, res) {
 	// console.log(tokenResponse);
 
 	let body = JSON.parse(tokenResponse.getBody());
-	var access_token = body.access_token;
+	access_token = body.access_token;
+	console.log('5) [client] Received the following token from authorizatioinServer', access_token);
+	console.log();
 
 	res.render('index', {access_token: body.access_token});
 });
 
-app.get('/fetch_resource', function(req, res) {});
+app.get('/fetch_resource', function(req, res) {
+	console.log('7) [client] Entered client\'s fetch_resouces endpoint');
+	console.log('7) [client] client has the following access_token:', access_token);
+
+	if(!access_token) {
+		res.render('error', {error: 'Missing access token.'});
+		console.log('7) [client] error: Missing access token.')
+		console.log();
+		return;
+	}
+
+	let headers = {
+		'Authorization': 'Bearer ' + access_token
+	};
+
+	console.log('7) [client] Sending POST request to protected resource with access_token');
+	let  resource  = request('POST', protectedResource, {headers:  headers});
+	console.log('9) [client] Received resource response from protectedResource', resource);
+	console.log('9) [client] Received resource.getBody() response from protectedResource', JSON.parse(resource.getBody()));
+	if(resource.statusCode >= 200 & resource.statusCode < 300) {
+		let body = JSON.parse(resource.getBody());
+		res.render('data', {resource: body});
+		return;
+	} else {
+		res.render('error', {});
+		return;
+	}
+	console.log();
+});
 
 var buildUrl = function(base, options, hash) {
 	let newUrl = url.parse(base, true);

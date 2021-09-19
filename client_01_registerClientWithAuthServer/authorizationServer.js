@@ -79,7 +79,7 @@ app.get("/authorize", function(req, res){
 		var reqid = randomstring.generate(8);
 		
 		requests[reqid] = req.query;
-		console.log('3) [AuthServer] Request resouce owner to approve client\'s authorization');
+		console.log('3) [AuthServer] Request resouce owner to approve client\'s authorization, waiting for approval...');
 		console.log();
 		res.render('approve', {client: client, reqid: reqid, scope: rscope});
 		return;
@@ -130,7 +130,7 @@ app.post('/approve', function(req, res) {
 			urlParsed.query = urlParsed.query || {};
 			urlParsed.query.code = code;
 			urlParsed.query.state = query.state; 
-			console.log("4) [AuthServer] User has approved client credentials and scope");
+			console.log("4) [AuthServer] Resource owner has approved client credentials and selected client's scope");
 			console.log("4) [AuthServer] redirecting to ", url.format(urlParsed));
 			console.log();
 			res.redirect(url.format(urlParsed));
@@ -159,7 +159,6 @@ app.post('/approve', function(req, res) {
 app.post("/token", function(req, res){
 	
 	console.log("6) [authServer] Entering authServer's token endpoint");
-	console.log();
 
 	var auth = req.headers['authorization'];
 	if (auth) {
@@ -212,13 +211,14 @@ app.post("/token", function(req, res){
 
 				nosql.insert({ access_token: access_token, client_id: clientId, scope: cscope });
 
-				console.log('Issuing access token %s', access_token);
-				console.log('with scope %s', cscope);
+				console.log('6) [authServer] Issuing access token %s', access_token);
+				console.log('6) [authServer] with scope %s', cscope);
 
 				var token_response = { access_token: access_token, token_type: 'Bearer',  scope: cscope };
 
 				res.status(200).json(token_response);
-				console.log('Issued tokens for code %s', req.body.code);
+				console.log('6) [authServer] Issued tokens for code %s', req.body.code);
+				console.log();
 				
 				return;
 			} else {
